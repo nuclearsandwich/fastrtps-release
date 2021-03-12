@@ -17,11 +17,11 @@
  *
  */
 
-#include "SQLite3PersistenceService.h"
-#include <fastrtps/log/Log.h>
-#include <fastrtps/rtps/history/CacheChangePool.h>
+#include <rtps/persistence/SQLite3PersistenceService.h>
+#include <fastdds/dds/log/Log.hpp>
+#include <fastdds/rtps/history/CacheChangePool.h>
 
-#include "sqlite3.h"
+#include <rtps/persistence/sqlite3.h>
 
 #include <string.h>
 
@@ -35,7 +35,7 @@ static sqlite3* open_or_create_database(const char* filename)
     int rc;
 
     // Open database
-    int flags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | 
+    int flags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE |
                 SQLITE_OPEN_FULLMUTEX | SQLITE_OPEN_SHAREDCACHE;
     rc = sqlite3_open_v2(filename, &db, flags, 0);
     if (rc != SQLITE_OK)
@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS writers(
     instance binary(16),
     payload blob,
     PRIMARY KEY(guid, seq_num DESC)
-) WITHOUT ROWID; 
+) WITHOUT ROWID;
 
 CREATE TABLE IF NOT EXISTS readers(
     guid text,
@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS readers(
     writer_guid_entity binary(4),
     seq_num integer,
     PRIMARY KEY(guid, writer_guid_prefix, writer_guid_entity)
-) WITHOUT ROWID; 
+) WITHOUT ROWID;
 
 )";
     rc = sqlite3_exec(db,create_statement,0,0,0);
@@ -126,7 +126,11 @@ SQLite3PersistenceService::~SQLite3PersistenceService()
 * @param writer_guid GUID of the writer to load.
 * @return True if operation was successful.
 */
-bool SQLite3PersistenceService::load_writer_from_storage(const std::string& persistence_guid, const GUID_t& writer_guid, std::vector<CacheChange_t*>& changes, CacheChangePool* pool)
+bool SQLite3PersistenceService::load_writer_from_storage(
+        const std::string& persistence_guid,
+        const GUID_t& writer_guid,
+        std::vector<CacheChange_t*>& changes,
+        CacheChangePool* pool)
 {
     logInfo(RTPS_PERSISTENCE, "Loading writer " << writer_guid);
 
@@ -165,7 +169,9 @@ bool SQLite3PersistenceService::load_writer_from_storage(const std::string& pers
 * @param change The cache change to add.
 * @return True if operation was successful.
 */
-bool SQLite3PersistenceService::add_writer_change_to_storage(const std::string& persistence_guid, const CacheChange_t& change)
+bool SQLite3PersistenceService::add_writer_change_to_storage(
+        const std::string& persistence_guid,
+        const CacheChange_t& change)
 {
     logInfo(RTPS_PERSISTENCE, "Writer " << change.writerGUID << " storing change for seq " << change.sequenceNumber);
 
@@ -194,7 +200,9 @@ bool SQLite3PersistenceService::add_writer_change_to_storage(const std::string& 
 * @param change The cache change to remove.
 * @return True if operation was successful.
 */
-bool SQLite3PersistenceService::remove_writer_change_from_storage(const std::string& persistence_guid, const CacheChange_t& change)
+bool SQLite3PersistenceService::remove_writer_change_from_storage(
+        const std::string& persistence_guid,
+        const CacheChange_t& change)
 {
     logInfo(RTPS_PERSISTENCE, "Writer " << change.writerGUID << " removing change for seq " << change.sequenceNumber);
 
@@ -214,7 +222,9 @@ bool SQLite3PersistenceService::remove_writer_change_from_storage(const std::str
 * @param reader_guid GUID of the reader to load.
 * @return True if operation was successful.
 */
-bool SQLite3PersistenceService::load_reader_from_storage(const std::string& reader_guid, std::map<GUID_t, SequenceNumber_t>& seq_map)
+bool SQLite3PersistenceService::load_reader_from_storage(
+        const std::string& reader_guid,
+        foonathan::memory::map<GUID_t, SequenceNumber_t, IPersistenceService::map_allocator_t>& seq_map)
 {
     logInfo(RTPS_PERSISTENCE, "Loading reader " << reader_guid);
 
@@ -244,7 +254,10 @@ bool SQLite3PersistenceService::load_reader_from_storage(const std::string& read
 * @param seq_number New sequence number value to set for the associated writer.
 * @return True if operation was successful.
 */
-bool SQLite3PersistenceService::update_writer_seq_on_storage(const std::string& reader_guid, const GUID_t& writer_guid, const SequenceNumber_t& seq_number) 
+bool SQLite3PersistenceService::update_writer_seq_on_storage(
+        const std::string& reader_guid,
+        const GUID_t& writer_guid,
+        const SequenceNumber_t& seq_number)
 {
     logInfo(RTPS_PERSISTENCE, "Reader " << reader_guid << " setting seq for writer " << writer_guid << " to " << seq_number);
 
@@ -264,5 +277,3 @@ bool SQLite3PersistenceService::update_writer_seq_on_storage(const std::string& 
 } /* namespace rtps */
 } /* namespace fastrtps */
 } /* namespace eprosima */
-
-
