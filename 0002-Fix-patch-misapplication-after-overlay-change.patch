@@ -1,0 +1,60 @@
+From 01936e39056e3d83dcd053ffb78c7d6d758f9232 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Steven!=20Ragnaro=CC=88k?= <steven@nuclearsandwich.com>
+Date: Tue, 4 May 2021 15:48:49 -0700
+Subject: [PATCH 2/2] Fix patch misapplication after overlay change.
+
+In 0f56cddcc1043a0784abafc6e563306c51516969 I removed the patch overlay
+directory from the rolling release track since we should be able to use
+the upstream package.xml. This caused a conflict during the application
+of the patches introduced by #14 and #15. This restores those changes
+for future releases.
+---
+ cmake/common/eprosima_libraries.cmake | 4 ++--
+ rpm/ros-rolling-fastrtps.spec         | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/cmake/common/eprosima_libraries.cmake b/cmake/common/eprosima_libraries.cmake
+index eac75f6b..3fb4cb6a 100644
+--- a/cmake/common/eprosima_libraries.cmake
++++ b/cmake/common/eprosima_libraries.cmake
+@@ -98,7 +98,7 @@ macro(eprosima_find_package package)
+             # Update submodule
+             message(STATUS "Updating submodule thirdparty/${package}")
+             execute_process(
+-                COMMAND git submodule update --recursive --init "thirdparty/${package}"
++                COMMAND echo "Submodules were already updated by Bloom - see ros2-gbp/fastrtps-release#15"
+                 WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+                 RESULT_VARIABLE EXECUTE_RESULT
+                 )
+@@ -225,7 +225,7 @@ macro(eprosima_find_thirdparty package thirdparty_name)
+             # Update submodule
+             message(STATUS "Updating submodule thirdparty/${thirdparty_name}")
+             execute_process(
+-                COMMAND git submodule update --recursive --init "thirdparty/${thirdparty_name}"
++                COMMAND echo "Submodules were already updated by Bloom - see ros2-gbp/fastrtps-release#15"
+                 WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+                 RESULT_VARIABLE EXECUTE_RESULT
+                 )
+diff --git a/rpm/ros-rolling-fastrtps.spec b/rpm/ros-rolling-fastrtps.spec
+index 79dfcf34..760f9cd4 100644
+--- a/rpm/ros-rolling-fastrtps.spec
++++ b/rpm/ros-rolling-fastrtps.spec
+@@ -19,7 +19,6 @@ Requires:       ros-rolling-fastcdr
+ Requires:       ros-rolling-foonathan-memory-vendor
+ Requires:       tinyxml2-devel
+ Requires:       ros-rolling-ros-workspace
+-BuildRequires:  asio-devel
+ BuildRequires:  cmake3
+ BuildRequires:  openssl-devel
+ BuildRequires:  ros-rolling-fastcdr
+@@ -61,6 +60,7 @@ mkdir -p obj-%{_target_platform} && cd obj-%{_target_platform}
+     -DSETUPTOOLS_DEB_LAYOUT=OFF \
+     -DINSTALL_EXAMPLES=OFF \
+     -DSECURITY=ON \
++    -DTHIRDPARTY_Asio=ON \
+     ..
+ 
+ %make_build
+-- 
+2.31.1
+
